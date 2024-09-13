@@ -51,7 +51,9 @@ def signup():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
-        hashed_password = generate_password_hash(password)
+        
+        # Use sha256 as the hashing method
+        hashed_password = generate_password_hash(password, method='sha256')
 
         try:
             user = users_collection.find_one({'email': email})
