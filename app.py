@@ -1,7 +1,6 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, session
 from pymongo import MongoClient
-from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
@@ -37,7 +36,8 @@ def login():
         except Exception as e:
             return f"Database query failed: {str(e)}"
 
-        if user and check_password_hash(user['password'], password):
+        # Direct password comparison (without hashing)
+        if user and user['password'] == password:
             session['email'] = email
             return redirect(url_for('dashboard'))
         else:
@@ -51,9 +51,6 @@ def signup():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
-        
-        # Use sha256 as the hashing method
-        hashed_password = generate_password_hash(password, method='sha256')
 
         try:
             user = users_collection.find_one({'email': email})
@@ -63,8 +60,9 @@ def signup():
         if user:
             return 'Email already exists!'
 
+        # Insert user with plaintext password (again, not recommended for production)
         try:
-            users_collection.insert_one({'email': email, 'password': hashed_password})
+            users_collection.insert_one({'email': email, 'password': password})
         except Exception as e:
             return f"Failed to insert user: {str(e)}"
 
